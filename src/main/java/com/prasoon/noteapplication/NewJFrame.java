@@ -6,12 +6,14 @@
 package com.prasoon.noteapplication;
 
 import java.awt.Color;
+import java.awt.Component;
 import javax.swing.JPanel;
 import java.sql.*;
 import java.util.HashMap;
 import javax.swing.DefaultListModel;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.JPasswordField;
 
 /**
  *
@@ -53,6 +55,26 @@ public class NewJFrame extends javax.swing.JFrame {
         }
     }
 
+    
+        public static String showPasswordPrompt( Component parent, String title )
+    {
+        // create a new JPasswordField
+        JPasswordField passwordField = new JPasswordField( );
+
+        passwordField.setEchoChar( '*' );
+
+        passwordField.setColumns( 20 );
+
+        int returnVal = JOptionPane.showConfirmDialog( parent, passwordField, title, JOptionPane.OK_CANCEL_OPTION );
+
+        if ( returnVal == JOptionPane.OK_OPTION ){
+            return new String( passwordField.getPassword( ) );
+        }
+        else
+        {
+            return null;
+        }
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -508,7 +530,8 @@ public class NewJFrame extends javax.swing.JFrame {
         JFrame f1;
         f1=new JFrame();
         f1.setUndecorated(true);
-        String pass=JOptionPane.showInputDialog(f1,"Create Password");
+        String pass=showPasswordPrompt(f1,"Create Password");
+                //JOptionPane.showInputDialog(f1,"Create Password");
         
         try{
             Connection myconn = null;
@@ -519,7 +542,7 @@ public class NewJFrame extends javax.swing.JFrame {
             myconn = DriverManager.getConnection("jdbc:mysql://localhost:3306/notes","root","root");
            // jNotes.append("Connection successful");
             mystmt = myconn.createStatement();
-            String newNote = "insert into notes values('"+name+"','','','','"+pass+"')";
+            String newNote = "insert into notes values('"+name+"','','','')";
             mystmt.execute(newNote);
             updateList();
             jNotes.setText("");
@@ -559,11 +582,14 @@ public class NewJFrame extends javax.swing.JFrame {
             myconn = DriverManager.getConnection("jdbc:mysql://localhost:3306/notes","root","root");
            // jNotes.append("Connection successful");
             mystmt = myconn.createStatement();
-            String getPass = "select * from notes where name = '"+name+"'";
-            rs = mystmt.executeQuery(getPass);
-            rs.next();
-            String pass = rs.getString("password");
-            var map = aes.encrypt(pass,m);
+
+            JFrame f1;
+            f1=new JFrame();
+            f1.setUndecorated(true);
+            String inpPass= showPasswordPrompt(f1,"Enter Password");
+                    //JOptionPane.showInputDialog(f1,"Enter Password");
+            
+            var map = aes.encrypt(inpPass,m);
             String message = map.get("message");
             String iv = map.get("iv");
             String salt = map.get("salt");
@@ -651,7 +677,8 @@ public class NewJFrame extends javax.swing.JFrame {
         JFrame f;
         f=new JFrame();
         f.setUndecorated(true);
-        String inpPass=JOptionPane.showInputDialog(f,"Enter Password");
+        String inpPass=showPasswordPrompt(f,"Enter Password");
+                //JOptionPane.showInputDialog(f,"Enter Password");
         
         try{
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -662,27 +689,16 @@ public class NewJFrame extends javax.swing.JFrame {
             String st = "select * from notes where name ='"+val+"'";
             rs = mystmt.executeQuery(st);
             rs.next();
-            String pass = rs.getString("password");
+
             String iv = rs.getString("iv");
             String message = rs.getString("message");
             String salt = rs.getString("salt");
-            if(inpPass.equals(pass)){
-                HashMap<String,String> map=new HashMap<String, String>();
-                map.put("password", pass);
-                map.put("salt", salt);
-                map.put("iv",iv);
-		map.put("message", message);
-                jNotes.setText(aes.decrypt(map));
-            }
-            else{
-                JFrame f1;   
-                f1=new JFrame();
-                f1.setUndecorated(true);
-                JOptionPane.showMessageDialog(f1,"Wrong Password!");
-                jNotes.setText("");
-            
-            }
-            
+            HashMap<String,String> map=new HashMap<String, String>();
+            map.put("password", inpPass);
+            map.put("salt", salt);
+            map.put("iv",iv);
+            map.put("message", message);
+            jNotes.setText(aes.decrypt(map));            
         }catch(Exception e){
             e.printStackTrace();
         }
