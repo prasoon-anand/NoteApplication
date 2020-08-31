@@ -56,7 +56,7 @@ public class NewJFrame extends javax.swing.JFrame {
     }
 
     
-        public static String showPasswordPrompt( Component parent, String title )
+    public static String showPasswordPrompt( Component parent, String title )
     {
         // create a new JPasswordField
         JPasswordField passwordField = new JPasswordField( );
@@ -64,9 +64,11 @@ public class NewJFrame extends javax.swing.JFrame {
         passwordField.setEchoChar( '*' );
 
         passwordField.setColumns( 20 );
-
+        
         int returnVal = JOptionPane.showConfirmDialog( parent, passwordField, title, JOptionPane.OK_CANCEL_OPTION );
-
+        
+        //passwordField.requestFocusInWindow();
+        
         if ( returnVal == JOptionPane.OK_OPTION ){
             return new String( passwordField.getPassword( ) );
         }
@@ -537,12 +539,20 @@ public class NewJFrame extends javax.swing.JFrame {
             Connection myconn = null;
             Statement mystmt = null;
             ResultSet rs = null;
+            var aes = new aesUtils();
             Class.forName("com.mysql.cj.jdbc.Driver");
            // jNotes.append("Connecting....");
             myconn = DriverManager.getConnection("jdbc:mysql://localhost:3306/notes","root","root");
            // jNotes.append("Connection successful");
             mystmt = myconn.createStatement();
-            String newNote = "insert into notes values('"+name+"','','','')";
+            String m = " ";
+            var map = aes.encrypt(pass,m);
+            String message = map.get("message");
+            String iv = map.get("iv");
+            String salt = map.get("salt");
+            
+            
+            String newNote = "insert into notes values('"+name+"','"+salt+"','"+iv+"','"+message+"')";
             mystmt.execute(newNote);
             updateList();
             jNotes.setText("");
@@ -658,6 +668,7 @@ public class NewJFrame extends javax.swing.JFrame {
     
     private void panelSettingsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_panelSettingsMouseClicked
         // TODO add your handling code here:
+        jNotes.setText("AUTHOR: PRASOON ANAND\nDATE: August 29, 2020\nEMAIL: prasoonanand@hotmail.com");
     }//GEN-LAST:event_panelSettingsMouseClicked
 
     private void panelSettingsMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_panelSettingsMouseEntered
